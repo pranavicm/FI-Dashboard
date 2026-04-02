@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TMRW — FI Inspection Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #E8C547;
+    --gold-dim: #c9a93a;
+    --gold-pale: #fef8dc;
+    --black: #1A1A1A;
+    --black-soft: #2d2d2d;
+    --white: #ffffff;
+    --off-white: #f7f5f0;
+    --surface: #f2f0eb;
+    --border: rgba(26,26,26,0.1);
+    --border-strong: rgba(26,26,26,0.2);
+    --text-primary: #1A1A1A;
+    --text-secondary: #6b6660;
+    --text-muted: #9c9690;
+    --pass: #1e8c2e;
+    --pass-bg: #d4edda;
+    --fail: #c0392b;
+    --fail-bg: #fde8e8;
+    --pending: #b07d00;
+    --pending-bg: #fef3cd;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--off-white);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--black);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--gold);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-logo span {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .brand-name {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .brand-divider { color: #444; margin: 0 2px; }
+  .brand-sub { color: #888; font-size: 13px; }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(232,197,71,0.12);
+    border: 1px solid rgba(232,197,71,0.3);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 500;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .date-badge {
+    color: #666;
+    font-size: 12px;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 600; }
+  .page-sub { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--black);
+    color: var(--gold);
+    border: 1px solid var(--black);
+  }
+  .btn-primary:hover { background: var(--black-soft); }
+  .btn-ghost {
+    background: var(--white);
+    color: var(--text-primary);
+    border: 1px solid var(--border-strong);
+  }
+  .btn-ghost:hover { background: var(--surface); }
+
+  /* ── FILTERS ── */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label { font-size: 12px; color: var(--text-muted); margin-right: 2px; }
+  .filter-chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: var(--white);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.12s;
+  }
+  .filter-chip:hover { background: var(--surface); }
+  .filter-chip.active { background: var(--black); color: var(--gold); border-color: var(--black); }
+
+  /* ── METRIC CARDS ── */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .metric {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.15s;
+  }
+  .metric:hover { box-shadow: var(--shadow-md); }
+  .metric.hero { background: var(--black); border-color: transparent; }
+  .metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); margin-bottom: 8px; }
+  .metric.hero .metric-label { color: #6b5f2a; }
+  .metric-val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 600; line-height: 1; }
+  .metric.hero .metric-val { color: var(--gold); }
+  .metric-sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+  .metric.hero .metric-sub { color: #5a5020; }
+  .metric-pill {
+    display: inline-block;
+    font-size: 10px; font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+  .pill-pass { background: var(--pass-bg); color: var(--pass); }
+  .pill-fail { background: var(--fail-bg); color: var(--fail); }
+  .pill-pending { background: var(--pending-bg); color: var(--pending); }
+  .pill-gold { background: rgba(232,197,71,0.15); color: var(--gold-dim); }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .panel-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; }
+  .panel-subtitle { font-size: 11px; color: var(--text-muted); }
+  .panel-body { padding: 16px 18px; }
+
+  /* ── LAYOUT ── */
+  .grid-main { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  @media (max-width: 768px) { .grid-main, .grid-half { grid-template-columns: 1fr; } }
+
+  /* ── REQUEST LIST ── */
+  .req-list { display: flex; flex-direction: column; }
+  .req-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .req-item:last-child { border-bottom: none; }
+  .req-item:hover { background: var(--off-white); }
+  .req-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .req-main { flex: 1; min-width: 0; }
+  .req-qr { font-size: 12px; font-weight: 500; font-family: 'Space Grotesk', sans-serif; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .req-style { font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .req-tag { font-size: 10px; font-weight: 500; padding: 2px 9px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
+  .req-date { font-size: 10px; color: var(--text-muted); flex-shrink: 0; min-width: 50px; text-align: right; }
+
+  /* ── FULFILMENT RING ── */
+  .ring-wrap { display: flex; align-items: center; gap: 20px; padding: 4px 0; }
+  .ring-svg { flex-shrink: 0; }
+  .ring-center { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600; fill: var(--text-primary); }
+  .ring-center-sub { font-size: 9px; fill: var(--text-muted); }
+  .ring-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .ring-legend-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .ring-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── DEFECT BARS ── */
+  .defect-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .defect-label { font-size: 11px; color: var(--text-secondary); min-width: 52px; }
+  .defect-track { flex: 1; height: 6px; background: var(--surface); border-radius: 3px; overflow: hidden; }
+  .defect-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .defect-count { font-size: 12px; font-weight: 500; color: var(--text-primary); min-width: 26px; text-align: right; }
+
+  /* ── VENDOR TABLE ── */
+  .vendor-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .vendor-row:last-child { border-bottom: none; }
+  .vendor-name { font-size: 12px; font-weight: 500; }
+  .vendor-meta { font-size: 11px; color: var(--text-muted); }
+  .vendor-bar { flex: 1; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; margin: 0 14px; }
+  .vendor-bar-fill { height: 100%; border-radius: 2px; }
+  .vendor-rate { font-size: 13px; font-weight: 600; min-width: 38px; text-align: right; font-family: 'Space Grotesk', sans-serif; }
+
+  /* ── TIMELINE ── */
+  .tl { display: flex; flex-direction: column; }
+  .tl-item { display: flex; gap: 10px; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; }
+  .tl-line { width: 1px; flex: 1; background: var(--border); margin: 3px 0; min-height: 18px; }
+  .tl-item:last-child .tl-line { display: none; }
+  .tl-content { padding-bottom: 14px; flex: 1; }
+  .tl-title { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+  .tl-meta { font-size: 11px; color: var(--text-muted); }
+
+  /* ── CHART PANEL ── */
+  .chart-wrap { position: relative; height: 200px; width: 100%; }
+  .chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .chart-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+  .chart-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── APPSHEET LINK ── */
+  .appsheet-bar {
+    background: var(--black);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .appsheet-bar-text h3 { font-size: 14px; font-weight: 500; color: var(--white); font-family: 'Space Grotesk', sans-serif; }
+  .appsheet-bar-text p { font-size: 12px; color: #888; margin-top: 2px; }
+  .btn-gold { background: var(--gold); color: var(--black); border: none; font-weight: 600; }
+  .btn-gold:hover { background: var(--gold-dim); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    margin-top: 1rem;
+  }
+  footer strong { color: var(--text-secondary); }
+
+  /* ── ANIMATIONS ── */
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <div class="brand-logo"><span>TMRW</span></div>
+    <span class="brand-name">House of Brands</span>
+    <span class="brand-divider">·</span>
+    <span class="brand-sub">FI Inspection Hub</span>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div>Live</div>
+    <span class="date-badge" id="live-date"></span>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header fade-in">
+    <div>
+      <div class="page-title">Final Inspection Dashboard</div>
+      <div class="page-sub">Bewakoof sourcing tracker · QA inspection workflow</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" onclick="window.print()">Export PDF</button>
+      <a href="#" class="btn btn-primary" id="appsheet-link">Open in AppSheet ↗</a>
+    </div>
+  </div>
+
+  <!-- APPSHEET LINK BAR -->
+  <div class="appsheet-bar fade-in delay-1">
+    <div class="appsheet-bar-text">
+      <h3>Ready to raise a new FI request?</h3>
+      <p>Enter your QR (Request_UID) directly in the app and all details auto-fill from the sourcing tracker.</p>
+    </div>
+    <a href="#" class="btn btn-gold" id="appsheet-link-2">Go to App ↗</a>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-bar fade-in delay-1">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-chip active" onclick="setFilter('all', this)">All requests</button>
+    <button class="filter-chip" onclick="setFilter('pending', this)">Pending</button>
+    <button class="filter-chip" onclick="setFilter('pass', this)">Passed</button>
+    <button class="filter-chip" onclick="setFilter('fail', this)">Failed</button>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics-grid fade-in delay-2">
+    <div class="metric hero">
+      <div class="metric-label">Total this month</div>
+      <div class="metric-val" id="m-total">24</div>
+      <div class="metric-sub">FI requests raised</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pending</div>
+      <div class="metric-val" style="color:var(--pending);" id="m-pending">7</div>
+      <div class="metric-pill pill-pending">Awaiting inspection</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Pass rate</div>
+      <div class="metric-val" style="color:var(--pass);" id="m-pass">71%</div>
+      <div class="metric-pill pill-pass">12 styles passed</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Fail rate</div>
+      <div class="metric-val" style="color:var(--fail);" id="m-fail">17%</div>
+      <div class="metric-pill pill-fail">5 styles failed</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Avg fulfilment</div>
+      <div class="metric-val">83%</div>
+      <div class="metric-pill pill-gold">Carton selection</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-main fade-in delay-3">
+    <!-- PENDING REQUESTS -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Inspection Requests</div>
+          <div class="panel-subtitle" id="req-subtitle">7 pending · 5 failed · 12 completed</div>
+        </div>
+      </div>
+      <div class="req-list" id="req-list"></div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+
+      <!-- FULFILMENT -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Avg Fulfilment</div>
+          <div class="panel-subtitle">Carton selection rate</div>
+        </div>
+        <div class="panel-body">
+          <div class="ring-wrap">
+            <svg width="90" height="90" viewBox="0 0 90 90" class="ring-svg">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#f0ece4" stroke-width="9"/>
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#E8C547" stroke-width="9"
+                stroke-dasharray="226" stroke-dashoffset="39"
+                stroke-linecap="round" transform="rotate(-90 45 45)"/>
+              <text x="45" y="42" text-anchor="middle" class="ring-center" font-family="Space Grotesk, sans-serif" font-size="18" font-weight="600" fill="#1A1A1A">83%</text>
+              <text x="45" y="54" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="8" fill="#9c9690">avg</text>
+            </svg>
+            <div class="ring-legend">
+              <div class="ring-legend-row"><div class="ring-swatch" style="background:#E8C547;"></div>Selected cartons</div>
+              <div class="ring-legend-row"><div class="ring-swatch" style="background:#e8e4dc;"></div>Remaining stock</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">4.2 of 5 avg per style</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEFECTS -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Defect Breakdown</div>
+          <div class="panel-subtitle">99 total defects logged</div>
+        </div>
+        <div class="panel-body">
+          <div class="defect-row">
+            <div class="defect-label">Major</div>
+            <div class="defect-track"><div class="defect-fill" style="width:68%; background:#e24b4a;"></div></div>
+            <div class="defect-count">34</div>
+          </div>
+          <div class="defect-row">
+            <div class="defect-label">Minor</div>
+            <div class="defect-track"><div class="defect-fill" style="width:84%; background:#E8C547;"></div></div>
+            <div class="defect-count">42</div>
+          </div>
+          <div class="defect-row">
+            <div class="defect-label">PPS</div>
+            <div class="defect-track"><div class="defect-fill" style="width:28%; background:#888;"></div></div>
+            <div class="defect-count">14</div>
+          </div>
+          <div class="defect-row" style="margin-bottom:0;">
+            <div class="defect-label">Critical</div>
+            <div class="defect-track"><div class="defect-fill" style="width:18%; background:#8e44ad;"></div></div>
+            <div class="defect-count">9</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM GRID -->
+  <div class="grid-half fade-in delay-4">
+
+    <!-- VENDOR PERFORMANCE -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Vendor Performance</div>
+        <div class="panel-subtitle">By pass rate</div>
+      </div>
+      <div class="panel-body" style="padding-top:8px; padding-bottom:8px;">
+        <div class="vendor-row">
+          <div><div class="vendor-name">Silverline Textiles</div><div class="vendor-meta">8 FIs · Woven tops</div></div>
+          <div class="vendor-bar"><div class="vendor-bar-fill" style="width:91%; background:#3d9e44;"></div></div>
+          <div class="vendor-rate" style="color:var(--pass);">91%</div>
+        </div>
+        <div class="vendor-row">
+          <div><div class="vendor-name">Prism Fabrics</div><div class="vendor-meta">6 FIs · Knits</div></div>
+          <div class="vendor-bar"><div class="vendor-bar-fill" style="width:83%; background:#5fba68;"></div></div>
+          <div class="vendor-rate" style="color:var(--pass);">83%</div>
+        </div>
+        <div class="vendor-row">
+          <div><div class="vendor-name">Apex Garments</div><div class="vendor-meta">5 FIs · Bottoms</div></div>
+          <div class="vendor-bar"><div class="vendor-bar-fill" style="width:60%; background:#E8C547;"></div></div>
+          <div class="vendor-rate" style="color:var(--pending);">60%</div>
+        </div>
+        <div class="vendor-row">
+          <div><div class="vendor-name">Delta Knitwear</div><div class="vendor-meta">5 FIs · T-shirts</div></div>
+          <div class="vendor-bar"><div class="vendor-bar-fill" style="width:40%; background:#e24b4a;"></div></div>
+          <div class="vendor-rate" style="color:var(--fail);">40%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Recent Activity</div>
+        <div class="panel-subtitle">Live inspection log</div>
+      </div>
+      <div class="panel-body" style="padding-top:8px; padding-bottom:8px;">
+        <div class="tl">
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-dot" style="background:#3d9e44;"></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tl-title">BK-17293-1957 — Pass</div><div class="tl-meta">Oversized shirt · Blue · Today 11:42am</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-dot" style="background:#e24b4a;"></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tl-title">BK-17291-4421 — Fail</div><div class="tl-meta">Cargo pants · Olive · Today 10:15am</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-dot" style="background:#E8C547;"></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tl-title">BK-17290-9912 — Pending</div><div class="tl-meta">Co-ord set · Cream · Raised yesterday</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-dot" style="background:#3d9e44;"></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tl-title">BK-17288-0033 — Pass</div><div class="tl-meta">Sweatshirt · Black · Yesterday 3:30pm</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-spine"><div class="tl-dot" style="background:#3d9e44;"></div><div class="tl-line"></div></div>
+            <div class="tl-content"><div class="tl-title">BK-17285-7761 — Pass</div><div class="tl-meta">Polo tee · White · Yesterday 1:10pm</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VOLUME CHART -->
+  <div class="panel fade-in delay-5" style="margin-bottom: 1.5rem;">
+    <div class="panel-head">
+      <div class="panel-title">Monthly Inspection Volume</div>
+      <div class="panel-subtitle">Pass / Fail / Pending by month</div>
+    </div>
+    <div class="panel-body">
+      <div class="chart-wrap"><canvas id="volumeChart"></canvas></div>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="chart-swatch" style="background:#1A1A1A;"></div>Pass</div>
+        <div class="chart-legend-item"><div class="chart-swatch" style="background:#E8C547;"></div>Fail</div>
+        <div class="chart-legend-item"><div class="chart-swatch" style="background:#d4cfc4;"></div>Pending</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  Built for <strong>TMRW: House of Brands</strong> · Bewakoof FI Inspection System ·
+  <a href="#" id="footer-app-link" style="color:#b07d00; text-decoration:none;">Open AppSheet App ↗</a>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  // ── CONFIG: paste your AppSheet app URL here ──
+  const APP_URL = 'https://www.appsheet.com/start/YOUR-APP-ID';
+
+  document.getElementById('appsheet-link').href = APP_URL;
+  document.getElementById('appsheet-link-2').href = APP_URL;
+  document.getElementById('footer-app-link').href = APP_URL;
+
+  // Live date
+  const d = new Date();
+  document.getElementById('live-date').textContent = d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+
+  // ── Request data ──
+  const requests = [
+    { qr: 'BK-17295-3341', style: 'Oversized Shirt · Navy', status: 'pending', date: 'Today' },
+    { qr: 'BK-17294-8821', style: 'Cargo Jogger · Olive',  status: 'pending', date: 'Today' },
+    { qr: 'BK-17293-1957', style: 'Polo Tee · White',       status: 'pass',    date: 'Today' },
+    { qr: 'BK-17292-4432', style: 'Co-ord Set · Cream',     status: 'pending', date: 'Yesterday' },
+    { qr: 'BK-17291-4421', style: 'Cargo Pants · Olive',    status: 'fail',    date: 'Today' },
+    { qr: 'BK-17290-9912', style: 'Sweatshirt · Black',     status: 'pending', date: 'Yesterday' },
+    { qr: 'BK-17289-7742', style: 'Graphic Tee · White',    status: 'pass',    date: 'Mar 31' },
+    { qr: 'BK-17288-0033', style: 'Bomber Jacket · Grey',   status: 'pass',    date: 'Mar 31' },
+    { qr: 'BK-17287-1192', style: 'Track Pants · Black',    status: 'fail',    date: 'Mar 30' },
+    { qr: 'BK-17286-5510', style: 'Crop Top · Lavender',    status: 'pending', date: 'Mar 30' },
+    { qr: 'BK-17285-7761', style: 'Hoodie · Charcoal',      status: 'pass',    date: 'Mar 29' },
+    { qr: 'BK-17284-3398', style: 'Denim Shirt · Blue',     status: 'pending', date: 'Mar 29' },
+    { qr: 'BK-17283-0045', style: 'Shorts · Beige',         status: 'fail',    date: 'Mar 28' },
+    { qr: 'BK-17282-6612', style: 'Slip Dress · Sage',      status: 'pending', date: 'Mar 28' },
+  ];
+
+  const tagMap = {
+    pending: { cls: 'pill-pending', label: 'Pending' },
+    pass:    { cls: 'pill-pass',    label: 'Pass' },
+    fail:    { cls: 'pill-fail',    label: 'Fail' },
+  };
+  const dotColor = { pending: '#E8C547', pass: '#3d9e44', fail: '#e24b4a' };
+
+  let activeFilter = 'all';
+
+  function setFilter(f, btn) {
+    activeFilter = f;
+    document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderList();
+  }
+
+  function renderList() {
+    const filtered = activeFilter === 'all' ? requests
+      : requests.filter(r => r.status === activeFilter);
+
+    const list = document.getElementById('req-list');
+    list.innerHTML = filtered.map(r => {
+      const t = tagMap[r.status];
+      return `<a class="req-item" href="${APP_URL}" target="_blank">
+        <div class="req-dot" style="background:${dotColor[r.status]};"></div>
+        <div class="req-main">
+          <div class="req-qr">${r.qr}</div>
+          <div class="req-style">${r.style}</div>
+        </div>
+        <span class="req-tag metric-pill ${t.cls}">${t.label}</span>
+        <div class="req-date">${r.date}</div>
+      </a>`;
+    }).join('') || '<div style="padding:20px 18px; text-align:center; color:var(--text-muted); font-size:12px;">No requests in this category</div>';
+  }
+
+  renderList();
+
+  // ── Chart ──
+  new Chart(document.getElementById('volumeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
+      datasets: [
+        { label: 'Pass',    data: [8, 11, 9, 14, 10, 12, 5], backgroundColor: '#1A1A1A', borderRadius: 4, stack: 's' },
+        { label: 'Fail',    data: [2,  3, 4,  2,  3,  5, 2], backgroundColor: '#E8C547', borderRadius: 4, stack: 's' },
+        { label: 'Pending', data: [0,  0, 0,  0,  0,  0, 7], backgroundColor: '#d4cfc4', borderRadius: 4, stack: 's' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' }, color: '#9c9690' } },
+        y: { stacked: true, grid: { color: '#f0ece4' }, border: { display: false }, ticks: { font: { size: 11, family: 'DM Sans' }, color: '#9c9690', stepSize: 5 } }
+      }
+    }
+  });
+</script>
+</body>
+</html>
